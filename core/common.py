@@ -20,20 +20,23 @@ class FunctionSignature:
     """
     :param return type:     Return type of function
     :param call_convention: Calling convention used in function
+    :param func_name:       Mangled function name
     :param func_args:       Array of type of function arguments
 
     :ivar ret:              Return type of function
     :ivar conv:             Calling convention used in function
+    :ivar func_name:        Mangled function name
     :ivar args:             Array of type of function arguments
     """
 
-    def __init__(self, return_type, call_convention, func_args):
+    def __init__(self, return_type, call_convention, func_name, func_args):
         self.ret = return_type
         self.conv = call_convention
+        self.func_name = func_name
         self.args = func_args
 
     def make_sig(self):
-        return f'{self.ret} {self.conv}({", ".join(self.args)})'
+        return f'{self.ret} {self.conv} {self.func_name}({", ".join(self.args)})'
 
 
 func_sig_pattern = re.compile(r'(\w+) (__\w+)(?:\()(\w.*)(?:\))')
@@ -144,6 +147,7 @@ def get_function_signature(func_ea) -> FunctionSignature:
     return FunctionSignature(
         parsed_sig.group(1),            # return type
         parsed_sig.group(2),            # calling convention
+        idc.get_name(func_ea),
         parsed_sig.group(3).split(', ')  # arguments
     )
 
@@ -158,14 +162,14 @@ def make_class_method(func_ea, typename):
     if not sig:
         return None
 
-    # change calling convention to __thiscall
+    # change calling convention
     sig.conv = '__thiscall'
     # set class object as first argument
     sig.args[0] = typename + '*'
 
     logger.info(
         f'New function signature for {hex(func_ea)} is {sig.make_sig()}')
-    return idaapi.apply_cdecl(None, func_ea, sig.make_sig())
+    idc.SetType(func_ea, sig.make_sig())
 
 
 def create_find_struct(name):
