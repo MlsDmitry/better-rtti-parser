@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 
 class TiClassKind:
     # CLASS_TYPE = '__class_type_info'
-    CLASS_TYPE = '_ZTV3N10__cxxabiv117__class_type_infoE'
-    SI_CLASS_TYPE = '_ZT4VN10__cxxabiv120__si_class_type_infoE'
-    VMI_CLASS_TYPE = '_ZTV4N10__cxxabiv121__vmi_class_type_infoE'
+    CLASS_TYPE = '_ZTVN10__cxxabiv117__class_type_infoE'
+    SI_CLASS_TYPE = '_ZTVN10__cxxabiv120__si_class_type_infoE'
+    VMI_CLASS_TYPE = '_ZTVN10__cxxabiv121__vmi_class_type_infoE'
 
 
 """

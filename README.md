@@ -22,6 +22,9 @@ Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class
 ### Current cover 
 - [x] GNU g++ 64-bit 
 - [x] IDA Pro 7.4-7.6
+- [ ] Rename functions to BaseClass::AnotherClass::sub_4B5A format
+- [ ] Make class graph ( Not really sure if needed )
+- [ ] Create structures for vtables
 - [ ] IDA Pro 7.0-7.3
 - [ ] GNU G++ 32-bit
 - [ ] MSVC 64-bit
@@ -32,6 +35,11 @@ Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class
 - IDA Pro 7.6
 - Python 3.10 ( I'm surprised this python version works well )
 - x64 GNU g++ binary
+
+### Example
+Check out example folder. There is .idb and .elf files for you to test.
+Example output ->
+![an image should be here](git_resources/demo.png)
 
 ### Credits
 1. [@IgorSkochinsky](https://twitter.com/igorskochinsky) for http://www.hexblog.com/wp-content/uploads/2012/06/Recon-2012-Skochinsky-Compiler-Internals.pdf ( plugin algo entirely based on his research )
