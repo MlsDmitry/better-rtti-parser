@@ -3,13 +3,30 @@
 
 Parses RTTI information from executable.
 
-### Why another RTTI parser ?
-I didn't really liked code in SusanRTTI repo and it didn't do what I want ( rename functions to BaseClass::AnotherClass::sub_4B5A ). I decided to spend few more hours to rewrite code, learn how to write IDA plugins. Finally, it became a lot faster, I really liked it, so I'll continue to update it.
+### Example
+**HexRays decompiler view**
+Before:
+![decompiler view before](git_resources/decompiler_before.png)
+After:
+![decompiler view after](git_resources/decompiler_after.png)
+
+**Functions window**
+Before:
+![functions window before](git_resources/function_window_before.png)
+After:
+![functions window after](git_resources/function_window_after.png)
+
+**Structs window**
+![structs windows](git_resources/structs_window_after.png)
 
 ### Install & Run
 1. git clone https://github.com/MlsDmitry/better-rtti-parser
 2. Click on "IDA > File > Script file" and choose rtti_parse.py
 3. Happy RE time!
+
+### Why another RTTI parser ?
+I didn't really liked code in SusanRTTI repo and it didn't do what I want ( rename functions to BaseClass::AnotherClass::sub_4B5A ). I decided to spend few more hours to rewrite code, learn how to write IDA plugins. Finally, it became a lot faster, I really liked it, so I'll continue to update it.
+
 
 ### Known issues
 #### No Code refs found for _ZNTV...
@@ -22,7 +39,7 @@ Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class
 ### Current cover 
 - [x] GNU g++ 64-bit 
 - [x] IDA Pro 7.4-7.6
-- [ ] Rename functions to BaseClass::AnotherClass::sub_4B5A format
+- [x] Rename functions to BaseClass::AnotherClass::sub_4B5A format
 - [ ] Make class graph ( Not really sure if needed )
 - [ ] Create structures for vtables
 - [ ] IDA Pro 7.0-7.3
@@ -36,11 +53,11 @@ Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class
 - Python 3.10 ( I'm surprised this python version works well )
 - x64 GNU g++ binary
 
-### Example
-Check out example folder. There is .idb and .elf files for you to test.
+### Examples
+Check out example folder. There are .elf files for you to test.
 
 Example output ->
-![an image should be here](git_resources/demo1.png)
+![an image should be here](git_resources/sample_output.png)
 
 ### Credits
 1. [@IgorSkochinsky](https://twitter.com/igorskochinsky) for http://www.hexblog.com/wp-content/uploads/2012/06/Recon-2012-Skochinsky-Compiler-Internals.pdf ( plugin algo entirely based on his research )
