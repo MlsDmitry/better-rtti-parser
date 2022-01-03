@@ -1,3 +1,4 @@
+from collections import namedtuple
 
 
 class Vtable:
@@ -8,11 +9,13 @@ class Vtable:
     :param ea:          Address of start of vtable
 
     :ivar entries:      Represents pointers to class virtual methods
+    :ivar dn_name:      Demangled type name
     """
+
     def __init__(self, type_name, ea):
         self.type_name = type_name
         self.ea = ea
         self.entries = {}
-    
+
     def add_entry(self, func_ea, func_name):
-        self.entries[func_ea] = func_name 
+        self.entries[func_ea] = func_name

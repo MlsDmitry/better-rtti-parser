@@ -9,3 +9,5 @@ if BIT64_MODE:
     PTR_SIZE = 8
 else:
     PTR_SIZE = 4
+    
+BAD_RET = 0xffffffffffffffff

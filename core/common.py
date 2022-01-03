@@ -1,4 +1,7 @@
 import logging
+import re
+
+from collections import namedtuple
 
 import ida_bytes
 import ida_typeinf
@@ -8,9 +11,32 @@ import ida_name
 import idaapi
 
 from core.binary_stream import Ida64BinaryStream, Ida32BinaryStream
-from core.consts import BIT64_MODE
+from core.consts import BIT64_MODE, BAD_RET
 
 logger = logging.getLogger(__name__)
+
+
+class FunctionSignature:
+    """
+    :param return type:     Return type of function
+    :param call_convention: Calling convention used in function
+    :param func_args:       Array of type of function arguments
+
+    :ivar ret:              Return type of function
+    :ivar conv:             Calling convention used in function
+    :ivar args:             Array of type of function arguments
+    """
+
+    def __init__(self, return_type, call_convention, func_args):
+        self.ret = return_type
+        self.conv = call_convention
+        self.args = func_args
+
+    def make_sig(self):
+        return f'{self.ret} {self.conv}({", ".join(self.args)})'
+
+
+func_sig_pattern = re.compile(r'(\w+) (__\w+)(?:\()(\w.*)(?:\))')
 
 
 def string2hex(string, encoding='ascii'):
@@ -95,3 +121,60 @@ def get_function_name(ea):
 
 def is_vtable_entry(pointer):
     return is_in_text_segment(pointer)
+
+
+def simplify_demangled_name(name):
+    """
+    Removes everything before :: and everything inside <>.
+    Ex:
+    Base::SomeClass::ClassTemplate<int,double,char> --> ClassTemplate
+    """
+    return re.sub('(<.*>|.*::)', '', name)
+
+
+def get_function_signature(func_ea) -> FunctionSignature:
+    signature = idc.get_type(func_ea)
+    if not signature:
+        return None
+
+    parsed_sig = re.match(func_sig_pattern, signature)
+    if not parsed_sig:
+        return None
+
+    return FunctionSignature(
+        parsed_sig.group(1),            # return type
+        parsed_sig.group(2),            # calling convention
+        parsed_sig.group(3).split(', ')  # arguments
+    )
+
+
+def make_class_method(func_ea, typename):
+    tinfo = idaapi.tinfo_t()
+
+    if not tinfo.get_named_type(None, typename):
+        return None
+
+    sig = get_function_signature(func_ea)
+    if not sig:
+        return None
+
+    # change calling convention to __thiscall
+    sig.conv = '__thiscall'
+    # set class object as first argument
+    sig.args[0] = typename + '*'
+
+    logger.info(
+        f'New function signature for {hex(func_ea)} is {sig.make_sig()}')
+    return idaapi.apply_cdecl(None, func_ea, sig.make_sig())
+
+
+def create_find_struct(name):
+    sid = idc.get_struc_id(name)
+    # if not, then create it
+    if sid != BAD_RET:
+        return sid
+
+    # ok, it doesn't exists, so we'll create it
+    sid = idc.add_struc(-1, name, None)
+
+    return sid if sid != BAD_RET else None

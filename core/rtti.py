@@ -4,9 +4,9 @@ import idc
 import ida_name
 import idautils
 import idaapi
+import ida_typeinf
 
-# from core.consts import PTR_SIZE
-from core.common import demangle, get_function_name, get_ida_bit_depended_stream, is_in_text_segment, is_vtable_entry
+from core.common import create_find_struct, demangle, get_function_name, get_ida_bit_depended_stream, is_in_text_segment, is_vtable_entry, make_class_method, simplify_demangled_name
 from core import consts
 from core.vtable import Vtable
 
@@ -20,6 +20,9 @@ class BasicClass:
     :ivar ea:           Location of typeinfo for this class
     :ivar type_name:    Type name in mangled form
     :ivar dn_name:      Demangled type name
+    :ivar vtable:       Vtable object. See core.vtable.Vtable for more details
+    :ivar cls_sid:      Class struct ID from idc.add_struc
+    :ivar vtable_sid:   Vtable struct ID from idc.add_struc
     """
 
     def __init__(self, ea):
@@ -34,6 +37,8 @@ class BasicClass:
         self.type_name = None
         self.dn_name = None
         self.vtable = None
+        self.cls_sid = None
+        self.vtable_sid = None
 
         self.read_name()
 
@@ -55,9 +60,10 @@ class BasicClass:
         if not self.dn_name:
             logger.error(f'Could not demangle {self.type_name}')
             return
-        
+
         # if 'name' in self.dn_name:
-        self.dn_name = self.dn_name.replace("`typeinfo name for", '').replace('\'', '')
+        self.dn_name = self.dn_name.replace(
+            "`typeinfo name for", '').replace('\'', '')
 
     def read_vtable(self):
         for ref in idautils.DataRefsTo(self.ea):
@@ -88,6 +94,44 @@ class BasicClass:
         """
         pass
 
+    def create_class_struct(self):
+        # remove everything before :: and inside <>
+        typename = simplify_demangled_name(self.dn_name)
+
+        self.cls_sid = create_find_struct(typename)
+
+        return self.cls_sid
+
+    def create_vtable_struct(self):
+        # remove everything before :: and inside <>
+        typename = simplify_demangled_name(self.dn_name)
+
+        self.vtable_sid = create_find_struct(typename)
+
+        return self.vtable_sid
+
+    def retype_vtable_functions(self):
+        for func_ea, func_name in self.vtable.entries.items():
+            if not func_name or '_ZN' in func_name:
+                continue
+
+            # TODO change to something cross-platform
+            if self.vtable_sid == 0xffffffffffffffff:
+                logger.error(
+                    'No structure has been created by code. Try to delete it manually for this class')
+                break
+
+            typename = idc.get_struc_name(self.vtable_sid)
+
+            new_name = f'_ZN' + str(len(typename)) + typename + \
+                str(len(func_name)) + func_name + 'Ev'
+
+            # rename function
+            idc.set_name(func_ea, new_name)
+            # apply type name to function
+            if make_class_method(func_ea, typename):
+                logger.info(f'Applied signature to {func_name}')
+
 
 class SiClassFlags:
     virtual_mask = 0x1
@@ -116,7 +160,7 @@ class SiClass(BasicClass):
 class VmiClassFlags:
     non_diamond_repeat_mask = 0x1
     diamond_shaped_mask = 0x2
-    flags_unkown_mask = 0x8
+    flags_unknown_mask = 0x8
 
 
 class VmiClass(BasicClass):

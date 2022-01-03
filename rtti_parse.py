@@ -15,9 +15,9 @@ from core.elf import get_elf_sym_crossplatform
 idaapi.require('core.binary_stream')
 idaapi.require('core.vtable')
 idaapi.require('core.consts')
-idaapi.require('core.rtti')
-idaapi.require('core.common')
 idaapi.require('core.elf')
+idaapi.require('core.common')
+idaapi.require('core.rtti')
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +51,11 @@ def process_class_info(symbol_name, ea):
             f'Found typeinfo for {classtype.dn_name} at {hex(typeinfo_ea.frm)}')
 
         classtype.read_vtable()
+        
+        if classtype.create_vtable_struct():
+            classtype.retype_vtable_functions()
+        else:
+            logger.error(f'vtable struct for {classtype.dn_name} not created !')
 
 
 def process():
