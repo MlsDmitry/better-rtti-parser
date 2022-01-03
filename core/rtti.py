@@ -75,6 +75,9 @@ class BasicClass:
             # ignore. typeinfo address
             stream.read_pointer()
 
+            # get rid of off_xxx 
+            idc.set_name(stream.get_current_position(), self.dn_name + '_vtable')
+            
             self.vtable = Vtable(self.type_name, stream.get_current_position())
 
             while True:
@@ -110,27 +113,34 @@ class BasicClass:
 
         return self.vtable_sid
 
+    def get_mangled_class_name(self):
+        typename = simplify_demangled_name(self.dn_name)
+        return str(len(typename)) + typename
+
+    def retype_vtable_function(self, typename, func_ea, func_name):
+        new_name = f'_ZN' + self.get_mangled_class_name() + \
+            str(len(func_name)) + func_name + 'Ev'
+
+        # rename function
+        idc.set_name(func_ea, new_name)
+        # apply type name to function
+        if make_class_method(func_ea, typename):
+            logger.info(f'Applied signature to {func_name}')
+
     def retype_vtable_functions(self):
         for func_ea, func_name in self.vtable.entries.items():
             if not func_name or '_ZN' in func_name:
                 continue
 
             # TODO change to something cross-platform
-            if self.vtable_sid == 0xffffffffffffffff:
+            if self.vtable_sid == consts.BAD_RET:
                 logger.error(
                     'No structure has been created by code. Try to delete it manually for this class')
                 break
 
             typename = idc.get_struc_name(self.vtable_sid)
 
-            new_name = f'_ZN' + str(len(typename)) + typename + \
-                str(len(func_name)) + func_name + 'Ev'
-
-            # rename function
-            idc.set_name(func_ea, new_name)
-            # apply type name to function
-            if make_class_method(func_ea, typename):
-                logger.info(f'Applied signature to {func_name}')
+            self.retype_vtable_function(typename, func_ea, func_name)
 
 
 class SiClassFlags:
@@ -150,11 +160,18 @@ class SiClass(BasicClass):
         super().__init__(ea)
 
         self.base_ea = None
+        self.base_typename = None
 
         self.read_typeinfo()
 
     def read_typeinfo(self):
         self.base_ea = self.stream.read_pointer()
+        self.base_typename = get_typeinfo_dn_name(self.base_ea)
+
+    def get_mangled_class_name(self):
+        part1 = super().get_mangled_class_name()
+        part2 = str(len(self.base_typename)) + self.base_typename
+        return part2 + part1
 
 
 class VmiClassFlags:
@@ -189,11 +206,17 @@ class VmiClass(BasicClass):
 
             logger.info(f'[{self.dn_name}] Found base class at {hex(base_ea)}')
 
-            # self.bases[base_ea] = idc.get_strlit_contents(base_ea + 8).decode('ascii')
+            self.bases[base_ea] = get_typeinfo_dn_name(base_ea)
 
             # demangled_name = demangle(self.bases[base_ea])
             logger.info(
                 f'[{self.dn_name}] Found {name} base class at {hex(base_ea)}')
+
+    def get_mangled_class_name(self):
+        part1 = super().get_mangled_class_name()
+        parts = [str(len(dn_name)) +
+                 dn_name for dn_name in self.bases.values()]
+        return ''.join(parts) + part1
 
 
 def get_typeinfo_dn_name(typeinfo_ea):
