@@ -38,6 +38,7 @@ Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class
 
 ### Example
 Check out example folder. There is .idb and .elf files for you to test.
+
 Example output ->
 ![an image should be here](git_resources/demo.png)
 
