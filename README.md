@@ -60,9 +60,10 @@ Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class
 - [x] Rename functions to BaseClass::AnotherClass::sub_4B5A format
 - [x] Create structures for vtables
 - [ ] Fix: place "v" at the end of symbol only if there are no parameters for function
+- [ ] Fix: some functions are only renamed, but retyping fails
 - [ ] Find destructors ( Not really sure how accurate it will be )
 - [ ] Make class graph
-- [ ] IDA Pro 7.0-7.3
+- [ ] IDA Pro 7.0-7.3 support
 - [ ] GNU G++ 32-bit
 - [ ] MSVC 64-bit
 - [ ] MSVC 32-bit
