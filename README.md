@@ -40,7 +40,7 @@ Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class
 Check out example folder. There is .idb and .elf files for you to test.
 
 Example output ->
-![an image should be here](git_resources/demo.png)
+![an image should be here](git_resources/demo1.png)
 
 ### Credits
 1. [@IgorSkochinsky](https://twitter.com/igorskochinsky) for http://www.hexblog.com/wp-content/uploads/2012/06/Recon-2012-Skochinsky-Compiler-Internals.pdf ( plugin algo entirely based on his research )
