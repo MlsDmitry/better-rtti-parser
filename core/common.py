@@ -74,7 +74,7 @@ def is_in_text_segment(ea):
     text_segment = ida_segment.get_segm_by_name('.text')
     if not text_segment:
         raise Exception(
-            'No text segment found thus cannot determine is address is in range of executable segment.')
+            'No text segment found thus cannot determine if address is in range of executable segment.')
     return text_segment.start_ea <= ea <= text_segment.end_ea
 
 
