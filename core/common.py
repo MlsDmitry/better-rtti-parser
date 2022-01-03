@@ -26,7 +26,7 @@ def prepare_data_for_search(data):
     elif isinstance(data, bytearray) or isinstance(data, bytes):
         hexstr = data.hex(' ')
     else:
-        logger.error(f'Unsupported type of data {type(data)}')
+        raise Exception(f'Unsupported type of data {type(data)}')
 
     return hexstr
 
@@ -95,5 +95,3 @@ def get_function_name(ea):
 
 def is_vtable_entry(pointer):
     return is_in_text_segment(pointer)
-
-
