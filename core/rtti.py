@@ -6,7 +6,7 @@ import idautils
 import idaapi
 import ida_typeinf
 
-from core.common import create_find_struct, demangle, get_function_name, get_ida_bit_depended_stream, is_in_text_segment, is_vtable_entry, make_class_method, simplify_demangled_name
+from core.common import create_find_struct, demangle, get_function_name, get_ida_bit_depended_stream, is_in_text_segment, is_vtable_entry, make_class_method, make_class_symbol_name, simplify_demangled_name
 from core import consts
 from core.vtable import Vtable
 
@@ -38,7 +38,6 @@ class BasicClass:
         self.vtable = None
         self.cls_sid = None
         self.vtable_sid = None
-
 
     def read_name(self):
         mangled_name_ea = self.stream.read_pointer()
@@ -106,14 +105,12 @@ class BasicClass:
 
         return self.vtable_sid
 
-    def get_mangled_class_name(self):
-        typename = simplify_demangled_name(self.dn_name)
-        return str(len(typename)) + typename
+    def get_class_name(self):
+        return [simplify_demangled_name(self.dn_name)]
 
     def retype_vtable_function(self, typename, func_ea, func_name):
-        new_name = f'_ZN' + self.get_mangled_class_name() + \
-            str(len(func_name)) + func_name + 'Ev'
-
+        new_name = make_class_symbol_name(
+            func_ea, [*self.get_class_name(), func_name])
         # rename function
         idc.set_name(func_ea, new_name)
         # apply type name to function
@@ -121,9 +118,7 @@ class BasicClass:
             logger.info(f'Applied signature to {func_name}')
 
     def retype_vtable_functions(self):
-        for func_ea, func_name in self.vtable.entries.items():
-            if not func_name:
-                continue
+        for func_ea, _ in self.vtable.entries.items():
 
             # TODO change to something cross-platform
             if self.vtable_sid == consts.BAD_RET:
@@ -133,7 +128,8 @@ class BasicClass:
 
             typename = idc.get_struc_name(self.vtable_sid)
 
-            self.retype_vtable_function(typename, func_ea, func_name)
+            custom_name = f'sub_{func_ea:X}'
+            self.retype_vtable_function(typename, func_ea, custom_name)
 
 
 class SiClassFlags:
@@ -147,6 +143,7 @@ class SiClass(BasicClass):
     Single-inherited class 
 
     :ivar base_ea:          Address to typeinfo of inherited class
+    :ivar base_typename:    Demangled typename of inherited(base) class
     """
 
     def __init__(self, ea):
@@ -155,15 +152,15 @@ class SiClass(BasicClass):
         self.base_ea = None
         self.base_typename = None
 
-
     def read_typeinfo(self):
         self.base_ea = self.stream.read_pointer()
         self.base_typename = get_typeinfo_dn_name(self.base_ea)
 
-    def get_mangled_class_name(self):
-        part1 = super().get_mangled_class_name()
-        part2 = str(len(self.base_typename)) + self.base_typename
-        return part2 + part1
+    def get_class_name(self):
+        return [
+            simplify_demangled_name(self.base_typename),
+            simplify_demangled_name(self.dn_name)
+        ]
 
 
 class VmiClassFlags:
@@ -184,7 +181,6 @@ class VmiClass(BasicClass):
         self.base_count = 0
         self.bases = {}
 
-
     def read_typeinfo(self):
         self.flags = self.stream.read_uint()
         self.base_count = self.stream.read_uint()
@@ -203,11 +199,10 @@ class VmiClass(BasicClass):
             logger.info(
                 f'[{self.dn_name}] Found {name} base class at {hex(base_ea)}')
 
-    def get_mangled_class_name(self):
-        part1 = super().get_mangled_class_name()
-        parts = [str(len(dn_name)) +
-                 dn_name for dn_name in self.bases.values()]
-        return ''.join(parts) + part1
+    def get_class_name(self):
+        parts = [simplify_demangled_name(dn_name)
+                 for dn_name in self.bases.values()]
+        return [*parts, simplify_demangled_name(self.dn_name)]
 
 
 def get_typeinfo_dn_name(typeinfo_ea):

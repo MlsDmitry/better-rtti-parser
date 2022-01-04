@@ -9,6 +9,8 @@ import idc
 import ida_segment
 import ida_name
 import idaapi
+import ida_hexrays
+import ida_funcs
 
 from core.binary_stream import Ida64BinaryStream, Ida32BinaryStream
 from core.consts import BIT64_MODE, BAD_RET
@@ -138,9 +140,11 @@ def simplify_demangled_name(name):
 def get_function_signature(func_ea) -> FunctionSignature:
     signature = idc.get_type(func_ea)
     if not signature:
-        logger.error(f'idc.get_type failed to get at {hex(func_ea)}')
+        logger.error(
+            f'idc.get_type failed at {func_ea:X}'
+        )
         return None
-
+        
     parsed_sig = re.match(func_sig_pattern, signature)
     if not parsed_sig:
         logger.error(f'Failed to run re.match for sig: {signature}')
@@ -153,16 +157,29 @@ def get_function_signature(func_ea) -> FunctionSignature:
         parsed_sig.group(3).split(', ')  # arguments
     )
 
+def make_class_symbol_name(func_ea, typenames):
+    """
+    Mangles name for class
+    :param func_ea:     Function address
+    :param typenames:   List of names which will be mangled
+    """
+    ret = '_ZN'
+    
+    sig = get_function_signature(func_ea)
+    
+    for typename in typenames:
+        ret += str(len(typename))
+        ret += typename
+
+    ret += 'E'
+     
+    if sig and len(sig.args) == 0:
+        ret += 'v'
+        
+    return ret
+        
 
 def make_class_method(func_ea, typename):
-    tinfo = idaapi.tinfo_t()
-
-    if not tinfo.get_named_type(None, typename):
-        logger.error(
-            f'Failed to get type for {typename}. Skipping {hex(func_ea)}'
-        )
-        return None
-
     sig = get_function_signature(func_ea)
     if not sig:
         logger.error(
