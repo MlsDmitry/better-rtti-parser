@@ -27,7 +27,6 @@ class BasicClass:
 
     def __init__(self, ea):
         self.ea = ea
-        assert self.ea != idc.BADADDR
 
         # TODO add support for 32 binary stream
         self.stream = get_ida_bit_depended_stream(ea)
@@ -40,7 +39,6 @@ class BasicClass:
         self.cls_sid = None
         self.vtable_sid = None
 
-        self.read_name()
 
     def read_name(self):
         mangled_name_ea = self.stream.read_pointer()
@@ -49,7 +47,7 @@ class BasicClass:
             mangled_name_ea)
         if not name:
             logger.error(f'Could not read C-string at {hex(mangled_name_ea)}')
-            return
+            return None
 
         # we need _ZTS prefix to make this name demanglable as string for typeinfo
         # https://github.com/gcc-mirror/gcc/blob/16e2427f50c208dfe07d07f18009969502c25dc8/gcc/cp/mangle.c#L4082 <-- code
@@ -59,11 +57,13 @@ class BasicClass:
 
         if not self.dn_name:
             logger.error(f'Could not demangle {self.type_name}')
-            return
+            return None
 
         # if 'name' in self.dn_name:
         self.dn_name = self.dn_name.replace(
             "`typeinfo name for", '').replace('\'', '')
+
+        return self.dn_name
 
     def read_vtable(self):
         for ref in idautils.DataRefsTo(self.ea):
@@ -75,21 +75,14 @@ class BasicClass:
             # ignore. typeinfo address
             stream.read_pointer()
 
-            # get rid of off_xxx 
-            idc.set_name(stream.get_current_position(), self.dn_name + '_vtable')
-            
-            self.vtable = Vtable(self.type_name, stream.get_current_position())
+            # get rid of off_xxx
+            idc.set_name(stream.get_current_position(),
+                         self.dn_name + '_vtable')
 
-            while True:
-                pointer = stream.read_pointer()
+            self.vtable = Vtable(self.type_name, self.dn_name,
+                                 stream.get_current_position())
 
-                if not is_vtable_entry(pointer):
-                    break
-
-                logger.info(
-                    f'New vtable entry {self.dn_name}::{get_function_name(pointer)}')
-
-                self.vtable.add_entry(pointer, get_function_name(pointer))
+            self.vtable.read()
 
     def read_typeinfo(self):
         """
@@ -129,7 +122,7 @@ class BasicClass:
 
     def retype_vtable_functions(self):
         for func_ea, func_name in self.vtable.entries.items():
-            if not func_name or '_ZN' in func_name:
+            if not func_name:
                 continue
 
             # TODO change to something cross-platform
@@ -162,7 +155,6 @@ class SiClass(BasicClass):
         self.base_ea = None
         self.base_typename = None
 
-        self.read_typeinfo()
 
     def read_typeinfo(self):
         self.base_ea = self.stream.read_pointer()
@@ -192,7 +184,6 @@ class VmiClass(BasicClass):
         self.base_count = 0
         self.bases = {}
 
-        self.read_typeinfo()
 
     def read_typeinfo(self):
         self.flags = self.stream.read_uint()
@@ -221,4 +212,5 @@ class VmiClass(BasicClass):
 
 def get_typeinfo_dn_name(typeinfo_ea):
     classtype = BasicClass(typeinfo_ea)
+    classtype.read_name()
     return classtype.dn_name

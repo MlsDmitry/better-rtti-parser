@@ -44,15 +44,29 @@ symbol_table = {
 
 def process_class_info(symbol_name, ea):
     for typeinfo_ea in idautils.XrefsTo(ea, 0):
-
+        if typeinfo_ea.frm == idc.BADADDR:
+            continue
+        
         classtype = symbol_table[symbol_name](typeinfo_ea.frm)
 
+        # skip this one, because name hasn't been read. 
+        if not classtype.read_name():
+            logger.error(
+                f'Failed to read name of typeinfo. mangled is: {classtype.type_name} at {hex(typeinfo_ea.frm)}'
+            )
+            continue
+
+        classtype.read_typeinfo()
+        
         logger.info(
             f'Found typeinfo for {classtype.dn_name} at {hex(typeinfo_ea.frm)}')
-
+        
+        # read vtable
         classtype.read_vtable()
         
+        # create struct for vtable
         if classtype.create_vtable_struct():
+            # retype functions
             classtype.retype_vtable_functions()
         else:
             logger.error(f'vtable struct for {classtype.dn_name} not created !')
@@ -83,7 +97,7 @@ def process():
 
         logger.info(f'elf_sym_s address is: {hex(elf_sym_s.st_value)}')
 
-        # 0x10 is offset to unk that always pop up in my idb
+        # 0x10 is offset to unk that always pops up in my idbs
         process_class_info(symbol_name, elf_sym_s.st_value + 0x10)
 
 

@@ -138,10 +138,12 @@ def simplify_demangled_name(name):
 def get_function_signature(func_ea) -> FunctionSignature:
     signature = idc.get_type(func_ea)
     if not signature:
+        logger.error(f'idc.get_type failed to get at {hex(func_ea)}')
         return None
 
     parsed_sig = re.match(func_sig_pattern, signature)
     if not parsed_sig:
+        logger.error(f'Failed to run re.match for sig: {signature}')
         return None
 
     return FunctionSignature(
@@ -156,20 +158,35 @@ def make_class_method(func_ea, typename):
     tinfo = idaapi.tinfo_t()
 
     if not tinfo.get_named_type(None, typename):
+        logger.error(
+            f'Failed to get type for {typename}. Skipping {hex(func_ea)}'
+        )
         return None
 
     sig = get_function_signature(func_ea)
     if not sig:
+        logger.error(
+            f'Failed to get function signature. skipping {hex(func_ea)}'
+        )
         return None
 
     # change calling convention
     sig.conv = '__thiscall'
     # set class object as first argument
     sig.args[0] = typename + '*'
+    # it's better to rename function.
+    # There are cases, when function name contains _ZN.
+    # Do I need to skip them ?
+    sig.name = f'sub_{hex(func_ea)[2:]}'
 
-    logger.info(
-        f'New function signature for {hex(func_ea)} is {sig.make_sig()}')
-    idc.SetType(func_ea, sig.make_sig())
+    ret = idc.SetType(func_ea, sig.make_sig())
+    if ret:
+        logger.info(
+            f'New function signature for {hex(func_ea)} is {sig.make_sig()}')
+    else:
+        logger.error(
+            f'Failed to set function type for {sig.name} at {hex(func_ea)}'
+        )
 
 
 def create_find_struct(name):
