@@ -56,7 +56,7 @@ Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class
 
 **Problem**:
 
-It's but that will be fixed in later commits. Probably, will add number prefix to names as IDA does for functions.
+It's a bug that will be fixed in later commits. Probably, will add number prefix to names as IDA does for functions.
 
 **Steps to resolve**
 
