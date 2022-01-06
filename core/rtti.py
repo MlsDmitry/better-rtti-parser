@@ -66,6 +66,7 @@ class BasicClass:
 
     def read_vtable(self):
         for ref in idautils.DataRefsTo(self.ea):
+            
             stream = get_ida_bit_depended_stream(ref - consts.PTR_SIZE)
 
             if stream.read_pointer() != 0:
@@ -76,12 +77,15 @@ class BasicClass:
 
             # get rid of off_xxx
             idc.set_name(stream.get_current_position(),
-                         self.dn_name + '_vtable')
+                         simplify_demangled_name(self.dn_name) + '_vtable')
 
             self.vtable = Vtable(self.type_name, self.dn_name,
                                  stream.get_current_position())
 
             self.vtable.read()
+            
+            break
+        return self.vtable
 
     def read_typeinfo(self):
         """

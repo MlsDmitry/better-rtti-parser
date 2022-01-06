@@ -2,7 +2,7 @@ import logging
 
 from collections import namedtuple
 
-from core.common import get_function_name, get_ida_bit_depended_stream, is_vtable_entry
+from core.common import get_function_name, get_ida_bit_depended_stream, is_vtable_entry, demangle
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,34 @@ class Vtable:
                 break
 
             logger.info(
-                f'New vtable entry {self.dn_name}::{get_function_name(pointer)}'
+                f'New vtable entry {self.dn_name}::{demangle(get_function_name(pointer))}'
             )
 
             self.add_entry(pointer, get_function_name(pointer))
+
+
+class TypeInfoVtable(Vtable):
+    def __init__(self, type_name, dn_name, ea):
+        super().__init__(type_name, dn_name, ea)
+
+        self.typeinfo_ea = None
+        self.typeinfo_offset_ea = None
+        self.vfuncs = []
+
+    def read(self):
+        # skip base offset and virtual base offset
+        self.stream.read_pointer()
+        # read typeinfo address
+        self.typeinfo_ea = self.stream.read_pointer()
+        # there is offset that used in all other typeinfos
+        self.typeinfo_offset_ea = self.stream.get_current_position()
+        # destructor
+        self.stream.read_pointer()
+
+        while True:
+            func_ea = self.stream.read_pointer()
+
+            if not is_vtable_entry(func_ea):
+                break
+
+            self.vfuncs.append(func_ea)

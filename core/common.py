@@ -12,7 +12,7 @@ import idaapi
 import ida_hexrays
 import ida_funcs
 
-from core.binary_stream import Ida64BinaryStream, Ida32BinaryStream
+from core.binary_stream import Ida64BinaryStream, Ida32BinaryStream, IdaBinaryStreamBase
 from core.consts import BIT64_MODE, BAD_RET
 
 logger = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ def is_in_text_segment(ea):
     return text_segment.start_ea <= ea <= text_segment.end_ea
 
 
-def get_ida_bit_depended_stream(start_ea):
+def get_ida_bit_depended_stream(start_ea) -> IdaBinaryStreamBase:
     if BIT64_MODE:
         return Ida64BinaryStream(start_ea)
     else:

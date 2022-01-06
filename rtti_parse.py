@@ -1,3 +1,8 @@
+from core.vtable import TypeInfoVtable
+from core.elf import read_elf_sym_crossplatform
+from core.common import search, demangle
+from core.rtti import BasicClass, SiClass, VmiClass
+import time
 import logging
 
 import idc
@@ -8,9 +13,6 @@ import ida_bytes
 import idaapi
 import ida_segment
 
-from core.rtti import BasicClass, SiClass, VmiClass
-from core.common import search, demangle
-from core.elf import get_elf_sym_crossplatform
 
 idaapi.require('core.binary_stream')
 idaapi.require('core.vtable')
@@ -39,40 +41,55 @@ symbol_table = {
     TiClassKind.VMI_CLASS_TYPE: VmiClass
 }
 
-# classes = []
+typeinfo_counter = 0
+vtable_counter = 0
+func_counter = 0
 
 
 def process_class_info(symbol_name, ea):
+    global typeinfo_counter, vtable_counter, func_counter
+
     for typeinfo_ea in idautils.XrefsTo(ea, 0):
         if typeinfo_ea.frm == idc.BADADDR:
             continue
-        
+
         classtype = symbol_table[symbol_name](typeinfo_ea.frm)
 
-        # skip this one, because name hasn't been read. 
+        # skip this one, because name hasn't been read.
         if not classtype.read_name():
             logger.error(
                 f'Failed to read name of typeinfo. mangled is: {classtype.type_name} at {hex(typeinfo_ea.frm)}'
             )
             continue
+        # will get rid of global variables later
+        typeinfo_counter += 1
 
         classtype.read_typeinfo()
-        
+
         logger.info(
             f'Found typeinfo for {classtype.dn_name} at {hex(typeinfo_ea.frm)}')
-        
+
         # read vtable
-        classtype.read_vtable()
-        
+        if not classtype.read_vtable():
+            logger.error(
+                f'Failed to find vtable for {classtype.dn_name}'
+            )
+            continue
+
+        vtable_counter += 1
+        func_counter += len(classtype.vtable.entries)
+
         # create struct for vtable
         if classtype.create_vtable_struct():
             # retype functions
             classtype.retype_vtable_functions()
         else:
-            logger.error(f'vtable struct for {classtype.dn_name} not created !')
+            logger.error(
+                f'vtable struct for {classtype.dn_name} not created !')
 
 
 def process():
+    start_time = time.time()
     for symbol_name in symbol_table:
         addr_ea = search(symbol_name)
 
@@ -87,7 +104,7 @@ def process():
             continue
 
         # parse Elf<64/32>_Sym struct
-        elf_sym_s = get_elf_sym_crossplatform(
+        elf_sym_s = read_elf_sym_crossplatform(
             elf_sym_struct_ea.frm)
 
         if not elf_sym_s or elf_sym_s.st_value == idc.BADADDR:
@@ -97,8 +114,17 @@ def process():
 
         logger.info(f'elf_sym_s address is: {hex(elf_sym_s.st_value)}')
 
-        # 0x10 is offset to unk that always pops up in my idbs
-        process_class_info(symbol_name, elf_sym_s.st_value + 0x10)
+        typeinfo_vtable = TypeInfoVtable(
+            symbol_name, demangle(symbol_name), elf_sym_s.st_value)
+
+        typeinfo_vtable.read()
+        # using typeinfo offset to search for other typeinfos
+        process_class_info(symbol_name, typeinfo_vtable.typeinfo_offset_ea)
+
+    logger.info(f'Completed in {round(time.time() - start_time, 2)}s')
+    logger.info(f'Total new classes: {typeinfo_counter}\n\
+Total vtables: {vtable_counter}\n\
+Total reanmed funcitons {func_counter}')
 
 
 def main():
