@@ -52,6 +52,15 @@ I didn't find a way to get address of first character of string that matched at 
 
 Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class_type_info by searching in IDA and replace old ones in TiClassKind in rtti_parse.py.
 
+#### Can't rename byte at 'xxx' because the name is already used in the program.
+
+**Problem**:
+
+It's but that will be fixed in later commits. Probably, will add number prefix to names as IDA does for functions.
+
+**Steps to resolve**
+
+Click on ignore for this database and continue. 
 
 ### Current cover 
 
