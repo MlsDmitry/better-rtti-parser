@@ -37,7 +37,7 @@ After:
 
 ### Why another RTTI parser ?
 
-I didn't really liked code in SusanRTTI repo and it didn't do what I want ( rename functions to BaseClass::AnotherClass::sub_4B5A ). I decided to spend few more hours to rewrite code, learn how to write IDA plugins. Finally, it became a lot faster, I really liked it, so I'll continue to update it.
+Known tools didn't have functionality to rename functions based on typeinfo ( e.g. sub_4B5A to BaseClass::AnotherClass::sub_4B5A ). So, I decided to spend few more hours to rewrite code, learn how to write IDA plugins. Finally, it works pretty fast, I really liked it, so I'll continue to update it.
 
 
 ### Known issues
