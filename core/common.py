@@ -62,6 +62,13 @@ def prepare_data_for_search(data):
     return hexstr
 
 
+def search_75(start_ea, data, search_flags):
+    hexstr = prepare_data_for_search(data)
+    
+    return idc.find_binary(start_ea, search_flags, hexstr)
+    
+    
+
 def search(data, start_ea=None, end_ea=None, search_flags=None) -> int:
     """
     Search data throughout idb. 
@@ -82,6 +89,9 @@ def search(data, start_ea=None, end_ea=None, search_flags=None) -> int:
     if search_flags is None:
         search_flags = idc.SEARCH_DOWN
 
+    if idaapi.IDA_SDK_VERSION <= 750:
+        return search_75(start_ea, data, search_flags)
+    
     pattern_obj = ida_bytes.compiled_binpat_vec_t()
 
     hexstr = prepare_data_for_search(data)
