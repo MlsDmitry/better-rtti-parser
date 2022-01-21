@@ -26,14 +26,16 @@ logger = logging.getLogger(__name__)
 
 
 class TiClassKind:
-    # CLASS_TYPE = '__class_type_info'
-    CLASS_TYPE = '_ZTVN10__cxxabiv117__class_type_infoE'
-    SI_CLASS_TYPE = '_ZTVN10__cxxabiv120__si_class_type_infoE'
-    VMI_CLASS_TYPE = '_ZTVN10__cxxabiv121__vmi_class_type_infoE'
+    CLASS_TYPE = '__class_type_info'
+    # CLASS_TYPE = '_ZTVN10__cxxabiv117__class_type_infoE'
+    # SI_CLASS_TYPE = '_ZTVN10__cxxabiv120__si_class_type_infoE'
+    SI_CLASS_TYPE = '__si_class_type_infoE'
+    # VMI_CLASS_TYPE = '_ZTVN10__cxxabiv121__vmi_class_type_infoE'
+    VMI_CLASS_TYPE = '__vmi_class_type_infoE'
 
 
 """
-These are symbols that used to find typeinfos and vtables
+These are symbols, that used to find typeinfos and vtables
 """
 symbol_table = {
     TiClassKind.CLASS_TYPE: BasicClass,
@@ -92,7 +94,9 @@ def process():
     start_time = time.time()
     for symbol_name in symbol_table:
         addr_ea = search(symbol_name)
-
+        # get start of the string
+        addr_ea = ida_bytes.get_item_head(addr_ea)
+        
         logger.info(f'Found {symbol_name} at {hex(addr_ea)}')
 
         # get only firest xref
