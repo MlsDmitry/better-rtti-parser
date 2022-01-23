@@ -42,16 +42,6 @@ Known tools didn't have functionality to rename functions based on typeinfo ( e.
 
 ### Known issues
 
-#### No Code refs found for _ZNTV...
-
-**Problem**: 
-
-I didn't find a way to get address of first character of string that matched at some position. If know/found solution just add answer in [#1](https://github.com/MlsDmitry/better-rtti-parser/issues/1#issue-1092129391) issue
-
-**Steps to resolve**:
-
-Find full symbol name for __class_type_info, __si_class_type_info or __vmi_class_type_info by searching in IDA and replace old ones in TiClassKind in rtti_parse.py.
-
 #### Can't rename byte at 'xxx' because the name is already used in the program.
 
 **Problem**:
