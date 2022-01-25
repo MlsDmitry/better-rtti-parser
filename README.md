@@ -5,7 +5,7 @@ Parses RTTI information from executable.
 
 ---
 
-This repository and author are open to feature requests. Plugin for community cannot exist without ideas from community. You're more than welcome to open a feature request in issue tab. For template see [FEATURE REQUEST](./FEATURE_REQUEST.md)
+This repository and author are open to feature requests. You're more than welcome to open a feature request in issue tab. For template see [FEATURE REQUEST](./FEATURE_REQUEST.md)
 
 ---
 
