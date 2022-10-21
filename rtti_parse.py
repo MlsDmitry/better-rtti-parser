@@ -1,7 +1,7 @@
-from core.vtable import TypeInfoVtable
-from core.elf import read_elf_sym_crossplatform
-from core.common import search, demangle
-from core.rtti import BasicClass, SiClass, VmiClass
+from rtti_parser_core.vtable import TypeInfoVtable
+from rtti_parser_core.elf import read_elf_sym_crossplatform
+from rtti_parser_core.common import search, demangle
+from rtti_parser_core.rtti import BasicClass, SiClass, VmiClass
 import time
 import logging
 
@@ -14,12 +14,12 @@ import idaapi
 import ida_segment
 
 
-idaapi.require('core.binary_stream')
-idaapi.require('core.vtable')
-idaapi.require('core.consts')
-idaapi.require('core.elf')
-idaapi.require('core.common')
-idaapi.require('core.rtti')
+idaapi.require('rtti_parser_core.binary_stream')
+idaapi.require('rtti_parser_core.vtable')
+idaapi.require('rtti_parser_core.consts')
+idaapi.require('rtti_parser_core.elf')
+idaapi.require('rtti_parser_core.common')
+idaapi.require('rtti_parser_core.rtti')
 
 
 logger = logging.getLogger(__name__)
@@ -130,7 +130,6 @@ def process():
 Total vtables: {vtable_counter}\n\
 Total reanmed funcitons {func_counter}')
 
-
 def main():
     process()
 
@@ -138,3 +137,29 @@ def main():
 if __name__ == '__main__':
     # breakpoint()
     main()
+
+
+class BetterRTTIParserPlugin(idaapi.plugin_t):
+    flags = 0
+    comment = 'Parse RTTI information from executable'
+    help = 'Parse RTTI information from executable'
+    wanted_name = 'Better RTTI Parser'
+    wanted_hotkey = ''
+
+    def init(self):
+        return idaapi.PLUGIN_OK
+
+    def run(self, arg):
+        process()
+
+    def term(self):
+        pass
+
+def PLUGIN_ENTRY():
+    try:
+        return BetterRTTIParserPlugin()
+
+    except Exception as err:
+        import traceback
+        print('rtti_parse.py Error: %s\n%s' % str((err), traceback.format_exc()))
+        raise

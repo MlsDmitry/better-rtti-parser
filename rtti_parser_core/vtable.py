@@ -2,7 +2,7 @@ import logging
 
 from collections import namedtuple
 
-from core.common import get_function_name, get_ida_bit_depended_stream, is_vtable_entry, demangle
+from rtti_parser_core.common import get_function_name, get_ida_bit_depended_stream, is_vtable_entry, demangle
 
 logger = logging.getLogger(__name__)
 

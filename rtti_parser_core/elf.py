@@ -3,15 +3,15 @@ import logging
 from io import BytesIO
 from dataclasses import dataclass
 
-from core.binary_stream import Ida64BinaryStream
-from core.consts import BIT64_MODE
+from rtti_parser_core.binary_stream import Ida64BinaryStream
+from rtti_parser_core.consts import BIT64_MODE
 
 import idaapi
 import idautils
 import ida_bytes
 import ida_segment
 
-from core.common import get_ida_bit_depended_stream
+from rtti_parser_core.common import get_ida_bit_depended_stream
 
 logger = logging.getLogger(__name__)
 
