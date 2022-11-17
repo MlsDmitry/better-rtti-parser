@@ -12,8 +12,8 @@ import idaapi
 import ida_hexrays
 import ida_funcs
 
-from core.binary_stream import Ida64BinaryStream, Ida32BinaryStream, IdaBinaryStreamBase
-from core.consts import BIT64_MODE, BAD_RET
+from rtti_parser_core.binary_stream import Ida64BinaryStream, Ida32BinaryStream, IdaBinaryStreamBase
+from rtti_parser_core.consts import BIT64_MODE, BAD_RET
 
 logger = logging.getLogger(__name__)
 

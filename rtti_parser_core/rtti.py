@@ -6,9 +6,9 @@ import idautils
 import idaapi
 import ida_typeinf
 
-from core.common import create_find_struct, demangle, get_function_name, get_ida_bit_depended_stream, is_in_text_segment, is_vtable_entry, make_class_method, make_class_symbol_name, simplify_demangled_name
-from core import consts
-from core.vtable import Vtable
+from rtti_parser_core.common import create_find_struct, demangle, get_function_name, get_ida_bit_depended_stream, is_in_text_segment, is_vtable_entry, make_class_method, make_class_symbol_name, simplify_demangled_name
+from rtti_parser_core import consts
+from rtti_parser_core.vtable import Vtable
 
 logger = logging.getLogger(__name__)
 
