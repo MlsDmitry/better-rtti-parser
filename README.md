@@ -7,6 +7,8 @@ Parses RTTI information from executable.
 
 This repository and author are open to feature requests. You're more than welcome to open a feature request in issue tab. For template see [FEATURE REQUEST](./FEATURE_REQUEST.md)
 
+Post your issues here https://github.com/MlsDmitry/better-rtti-parser/issues.
+
 ---
 
 ### Example
